@@ -27,6 +27,8 @@ I chose the **Ctrl** package for practical reasons. It allowed me to move faster
 **Business logic**
 I would move the logic inside `getNewImage` from the Ctrl class to a separate layer. Personally, I like to have a **Logic layer** rather than a Domain layer and use the **Action pattern** (from Laravel) instead of use cases. I would love to explain why another time.
 
+**Better abstractions**
+
 **Loading widget.**  
 Initially, I had a `BackdropFilter` together with my `CircularProgressIndicator` widget to have a better loading feel. However, `BackdropFilter` is relatively expensive performance-wise, so in my last commit I removed it to reduce UI cost. Since I did not want to spend more time on it, I left just the progress indicator. A more refined loading state would definitely be an improvement.
 
