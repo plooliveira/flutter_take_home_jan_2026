@@ -51,7 +51,7 @@ At minimum, I would add `Semantics` labels to the main action button and loading
 
 ### Color selection for a dynamic background
 
-This was an interesting part of the assessment. My initial thought was to use the dominant color with the `palette_generator` package that I was already familiar with. However, after reading the requirements, I realized that this approach would complicate handling light and dark modes, and that `palette_generator` had been discontinued.
+This was an interesting part of the assignment. My initial thought was to use the dominant color with the `palette_generator` package that I was already familiar with. However, after reading the requirements, I realized that this approach would complicate handling light and dark modes, and that `palette_generator` had been discontinued.
 
 I considered using the community-maintained version or similar packages, but after reading the open issue explaining that the Flutter team will no longer support `palette_generator`, I discovered that Material Design now provides a **utilities package** for this type of color extraction, albeit with more manual work required.
 
