@@ -45,7 +45,7 @@ I chose to use `flutter_animate` because it provides expressive animations with 
 I implemented a very rudimentary theme selection to demonstrate how color choices behave in different environments. With more time, I would implement a more robust theming approach.
 
 **Accessibility.**  
-Accessibility was handled at a minimal level. At minimum, I would add `Semantics` labels to the main action button and loading states to support screen readers.
+At minimum, I would add `Semantics` labels to the main action button and loading states to support screen readers.
 
 ---
 
