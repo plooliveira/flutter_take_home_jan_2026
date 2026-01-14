@@ -3,33 +3,26 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:aurora_take_home_paulo/core/result.dart';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 
+/// Extracts dominant colors from an image.
+/// - Main Thread: Prepares image bytes (UI-bound operations)
 Future<Result<List<Color>>> getColorsFromImage(ImageProvider provider) async {
   try {
-    // Extract dominant colors from image.
-    final quantizerResult = await _extractColorsFromImageProvider(provider);
-    final Map<int, int> colorToCount = quantizerResult.colorToCount.map(
-      (key, value) => MapEntry<int, int>(_getArgbFromAbgr(key), value),
-    );
+    // This must be done on the main thread
+    final ui.Image scaledImage = await _imageProviderToScaled(provider);
+    final ByteData? imageBytes = await scaledImage.toByteData();
 
-    // Score colors for color scheme suitability.
-    final List<int> filteredResults = Score.score(
-      colorToCount,
-      desired: 1,
-      filter: true,
-    );
-    final List<int> scoredResults = Score.score(
-      colorToCount,
-      desired: 4,
-      filter: false,
-    );
-    final colors = <dynamic>{
-      ...filteredResults,
-      ...scoredResults,
-    }.toList().map((argb) => Color(argb)).toList();
+    if (imageBytes == null) {
+      return Failure(Exception('Failed to get image bytes'));
+    }
+
+    final Uint32List pixels = imageBytes.buffer.asUint32List();
+
+    // This can be done on the background thread
+    final List<Color> colors = await compute(_quantizePixels, pixels);
 
     return Success(colors);
   } catch (e) {
@@ -38,22 +31,35 @@ Future<Result<List<Color>>> getColorsFromImage(ImageProvider provider) async {
   }
 }
 
-// ColorScheme.fromImageProvider() utilities.
-
-// Extracts bytes from an [ImageProvider] and returns a [QuantizerResult]
-// containing the most dominant colors.
-Future<QuantizerResult> _extractColorsFromImageProvider(
-  ImageProvider imageProvider,
-) async {
-  final ui.Image scaledImage = await _imageProviderToScaled(imageProvider);
-  final ByteData? imageBytes = await scaledImage.toByteData();
-
+Future<List<Color>> _quantizePixels(Uint32List pixels) async {
+  // Run quantizer
   final QuantizerResult quantizerResult = await QuantizerCelebi().quantize(
-    imageBytes!.buffer.asUint32List(),
+    pixels,
     128,
     returnInputPixelToClusterPixel: true,
   );
-  return quantizerResult;
+
+  // Convert ABGR to ARGB
+  final Map<int, int> colorToCount = quantizerResult.colorToCount.map(
+    (key, value) => MapEntry<int, int>(_getArgbFromAbgr(key), value),
+  );
+
+  // Score colors for color scheme suitability
+  final List<int> filteredResults = Score.score(
+    colorToCount,
+    desired: 1,
+    filter: true,
+  );
+  final List<int> scoredResults = Score.score(
+    colorToCount,
+    desired: 4,
+    filter: false,
+  );
+
+  return <dynamic>{
+    ...filteredResults,
+    ...scoredResults,
+  }.toList().map((argb) => Color(argb)).toList();
 }
 
 // Scale image size down to reduce computation time of color extraction.

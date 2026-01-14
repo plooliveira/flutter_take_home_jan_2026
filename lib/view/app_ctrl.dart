@@ -5,6 +5,7 @@ import 'package:aurora_take_home_paulo/data/models/image_data.dart';
 import 'package:aurora_take_home_paulo/data/repositories/image_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ctrl/ctrl.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ImageBundle {
@@ -40,45 +41,48 @@ class AppCtrl with Ctrl {
 
   AppCtrl(this.imageRepository);
 
-  void getNewImage() {
-    executeAsync(() async {
-      await imageRepository.get().then((response) async {
-        switch (response) {
-          case Success<ImageData>():
-            _imageData.update((value) {
-              value.url = response.data.url;
-              value.hasError = false;
-            });
-            await getColorsFromImage(
-              CachedNetworkImageProvider(
-                response.data.url,
-                errorListener: (value) {
+  void getNewImage() async {
+    beginLoading();
+    imageRepository.get().then((response) async {
+      switch (response) {
+        case Success<ImageData>():
+          _imageData.update((value) {
+            value.url = response.data.url;
+            value.hasError = false;
+          });
+
+          await getColorsFromImage(
+            CachedNetworkImageProvider(
+              response.data.url,
+              errorListener: (value) {
+                _imageData.update((value) {
+                  value.colorPallete = [Colors.white];
+                  value.hasError = true;
+                });
+                completeLoading();
+              },
+            ),
+          ).then((colorsResult) {
+            switch (colorsResult) {
+              case Success<List<Color>>():
+                if (colorsResult.data.isNotEmpty) {
                   _imageData.update((value) {
-                    value.colorPallete = [Colors.white];
-                    value.hasError = true;
+                    value.colorPallete = colorsResult.data;
+                    value.hasError = false;
                   });
-                  completeLoading();
-                },
-              ),
-            ).then((colorsResult) {
-              switch (colorsResult) {
-                case Success<List<Color>>():
-                  if (colorsResult.data.isNotEmpty) {
-                    _imageData.update((value) {
-                      value.colorPallete = colorsResult.data;
-                      value.hasError = false;
-                    });
-                  }
-                  break;
-                case Failure<List<Color>>():
-                  break;
-              }
-            });
-            break;
-          case Failure<ImageData>():
-            break;
-        }
-      });
+                }
+                completeLoading();
+                break;
+              case Failure<List<Color>>():
+                completeLoading();
+                break;
+            }
+          });
+          break;
+        case Failure<ImageData>():
+          completeLoading();
+          break;
+      }
     });
   }
 }

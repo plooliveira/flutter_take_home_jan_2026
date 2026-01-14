@@ -95,10 +95,7 @@ class AppView extends CtrlWidget<AppCtrl> {
                     ctrl.isLoading,
                     builder: (context, value) {
                       if (value) {
-                        return BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
+                        return Center(child: CircularProgressIndicator());
                       }
                       return const SizedBox();
                     },
