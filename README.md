@@ -10,6 +10,8 @@ Completed on January 13, 2026
 
 ---
 
+<video src="demo.mp4" controls width="100%"></video>
+
 ### Initial comments
 
 I decided to complete the assessment as quickly as possible, since I had already read the requirements and did not want to spend too much time thinking about it, given that the idea of the exercise was to work under a tighter time constraint. I treated the project as a POC or prototype to validate a performant and reliable approach to dealing with the problem, intentionally leaving out certain aspects.
