@@ -18,10 +18,13 @@ I decided to complete the assessment as quickly as possible, since I had already
 
 ### What I would do differently if I had 20 hours to do it
 
+**Refactoring**
 The most problematic part of my implementation is the duplication of cached image requests with `CachedNetworkImageProvider` and `CachedNetworkImage`. To instantiate it only once and reuse it for both `getColorsFromImage` and on the screen, I would need to ditch `CachedNetworkImage` and use a regular `Image` widget, which would significantly increase the complexity of doing a smooth transition between images. Given the time constraints, I accepted this as a trade-off to keep transitions simple.
 
+**State management**
 I chose the **Ctrl** package for practical reasons. It allowed me to move faster under the given time constraints while still keeping state and side effects explicit. For example, when I read *“Respect light/dark mode,”* I automatically knew how to handle it. That being said, if I had significantly more time, I would prefer to use **Bloc** to have more control over the way events and states happen. Fine control over event concurrency would be helpful to implement prefetching of the next image (more below).
 
+**Business logic**
 I would move the logic inside `getNewImage` from the Ctrl class to a separate layer. Personally, I like to have a **Logic layer** rather than a Domain layer and use the **Action pattern** (from Laravel) instead of use cases. I would love to explain why another time.
 
 **Loading widget.**  
@@ -55,3 +58,8 @@ After digging deeper, I also understood the reasons behind the discontinuation o
 I therefore took a code snippet implementing color extraction using `material_color_utilities` and modified it to isolate the quantization logic in a separate thread.
 
 And voilà.
+
+Links:
+- https://github.com/flutter/flutter/issues/122788
+- https://jwill.dev/blog/2025/06/02/Extract-Colors-From-Image.html
+- https://github.com/jwill/extract_palette_from_image/blob/main/lib/image.dart
