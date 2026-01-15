@@ -1,9 +1,9 @@
 import 'package:aurora_take_home_paulo/core/theme.dart';
 import 'package:aurora_take_home_paulo/view/app_ctrl.dart';
-import 'package:aurora_take_home_paulo/view/widget/background_layer.dart';
-import 'package:aurora_take_home_paulo/view/widget/another_button.dart';
-import 'package:aurora_take_home_paulo/view/widget/image_card.dart';
-import 'package:aurora_take_home_paulo/view/widget/theme_toggle_button.dart';
+import 'package:aurora_take_home_paulo/view/widgets/background_layer.dart';
+import 'package:aurora_take_home_paulo/view/widgets/another_button.dart';
+import 'package:aurora_take_home_paulo/view/widgets/image_card.dart';
+import 'package:aurora_take_home_paulo/view/widgets/theme_toggle_button.dart';
 import 'package:ctrl/ctrl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
