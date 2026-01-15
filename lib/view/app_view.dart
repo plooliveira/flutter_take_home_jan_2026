@@ -13,6 +13,7 @@ class AppView extends CtrlWidget<AppCtrl> {
 
   @override
   void onInit(BuildContext context, ctrl) {
+    ctrl.getNewImage();
     ctrl.isLoading.addListener(() {
       if (ctrl.isLoading.value) {
         SemanticsService.sendAnnouncement(
@@ -29,9 +30,6 @@ class AppView extends CtrlWidget<AppCtrl> {
       }
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ctrl.getNewImage();
-    });
     super.onInit(context, ctrl);
   }
 
