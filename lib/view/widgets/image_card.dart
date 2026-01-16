@@ -1,4 +1,4 @@
-import 'package:aurora_take_home_paulo/view/app_ctrl.dart';
+import 'package:aurora_take_home_paulo/logic/actions/fetch_image_bundle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -51,42 +51,42 @@ class ImageCard extends StatelessWidget {
                         ],
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: image == null
-                          ? ColoredBox(color: Colors.grey)
-                                .animate(target: isLoading ? 1 : 0)
-                                .blur(
-                                  duration: const Duration(milliseconds: 500),
-                                )
-                          : AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 500),
-                                  child: SizedBox(
-                                    key: ValueKey(imageData.url),
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    child: Image(
-                                      image: image,
-                                      fit: BoxFit.cover,
-                                      semanticLabel: 'Image from server',
-                                    ),
-                                  ),
-                                )
-                                .animate(target: isLoading ? 1 : 0)
-                                .blur(
-                                  duration: const Duration(milliseconds: 500),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                        child: image == null || isLoading
+                            ? ColoredBox(
+                                    key: const ValueKey('empty'),
+                                    color: Colors.grey.withAlpha(150),
+                                    child: SizedBox.expand(),
+                                  )
+                                  .animate(
+                                    onPlay: (controller) => controller.repeat(),
+                                  )
+                                  .shimmer(
+                                    duration: 1200.ms,
+                                    color: Colors.white.withAlpha(80),
+                                  )
+                            : SizedBox(
+                                key: ValueKey(imageData.url),
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: Image(
+                                  image: image,
+                                  fit: BoxFit.cover,
+                                  semanticLabel: 'Image from server',
                                 ),
+                              ),
+                      ),
                     );
                   },
                 ),
-                if (isLoading)
-                  Center(
-                    child: CircularProgressIndicator(
-                      color: imageData.image == null
-                          ? Colors.white
-                          : colorScheme.primary,
-                    ),
-                  )
-                else
-                  const SizedBox(),
               ],
             ),
           ),

@@ -21,13 +21,15 @@ class AppView extends CtrlWidget<AppCtrl> {
           "Loading new image from server",
           Directionality.of(context),
         );
-      } else {
-        SemanticsService.sendAnnouncement(
-          View.of(context),
-          "New Image loaded",
-          Directionality.of(context),
-        );
       }
+    });
+
+    ctrl.imageData.addListener(() {
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        "New Image loaded",
+        Directionality.of(context),
+      );
     });
 
     super.onInit(context, ctrl);
@@ -82,15 +84,9 @@ class AppView extends CtrlWidget<AppCtrl> {
       floatingActionButton: Watch(
         ctrl.isLoading,
         builder: (context, isLoading) {
-          return Watch(
-            ctrl.colorScheme,
-            builder: (context, colorScheme) {
-              return AnotherButton(
-                isLoading: isLoading,
-                colorScheme: colorScheme,
-                onPressed: ctrl.getNewImage,
-              );
-            },
+          return AnotherButton(
+            isLoading: isLoading,
+            onPressed: ctrl.getNewImage,
           );
         },
       ),
