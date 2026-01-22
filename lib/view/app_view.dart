@@ -1,11 +1,12 @@
-import 'dart:ui';
-
 import 'package:aurora_take_home_paulo/core/theme.dart';
 import 'package:aurora_take_home_paulo/view/app_ctrl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:aurora_take_home_paulo/view/widgets/background_layer.dart';
+import 'package:aurora_take_home_paulo/view/widgets/another_button.dart';
+import 'package:aurora_take_home_paulo/view/widgets/image_card.dart';
+import 'package:aurora_take_home_paulo/view/widgets/theme_toggle_button.dart';
 import 'package:ctrl/ctrl.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/rendering.dart';
 
 class AppView extends CtrlWidget<AppCtrl> {
   const AppView({super.key});
@@ -13,6 +14,24 @@ class AppView extends CtrlWidget<AppCtrl> {
   @override
   void onInit(BuildContext context, ctrl) {
     ctrl.getNewImage();
+    ctrl.isLoading.addListener(() {
+      if (ctrl.isLoading.value) {
+        SemanticsService.sendAnnouncement(
+          View.of(context),
+          "Loading new image from server",
+          Directionality.of(context),
+        );
+      }
+    });
+
+    ctrl.imageData.addListener(() {
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        "New Image loaded",
+        Directionality.of(context),
+      );
+    });
+
     super.onInit(context, ctrl);
   }
 
@@ -27,8 +46,8 @@ class AppView extends CtrlWidget<AppCtrl> {
           Watch(
             ctrl.colorScheme,
             builder: (context, scheme) {
-              return IconButton(
-                icon: Icon(Icons.brightness_4, color: scheme.surface),
+              return ThemeToggleButton(
+                colorScheme: scheme,
                 onPressed: Locator().get<AppThemeCtrl>().toggleTheme,
               );
             },
@@ -41,68 +60,23 @@ class AppView extends CtrlWidget<AppCtrl> {
           Watch(
             ctrl.colorScheme,
             builder: (context, scheme) {
-              return Container(color: scheme.primary);
+              return BackgroundLayer(colorScheme: scheme);
             },
           ),
-          Center(
-            child: SizedBox(
-              width: 300,
-              height: 300,
-              child: Stack(
-                children: [
-                  Watch(
-                    ctrl.imageData,
-                    builder: (context, imageData) {
-                      if (imageData.url.isEmpty) return const SizedBox();
-                      return Container(
-                        width: 300,
-                        height: 300,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(50),
-                              spreadRadius: 2,
-                              blurRadius: 3,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: CachedNetworkImage(
-                          key: ValueKey(imageData.hasError),
-                          imageUrl: imageData.url,
-                          useOldImageOnUrlChange: true,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Image.asset(
-                            'assets/images/image_error.jpg',
-                            fit: BoxFit.cover,
-                          ),
-                          placeholder: (context, url) {
-                            if (imageData.hasError) {
-                              return Image.asset(
-                                'assets/images/image_error.jpg',
-                                fit: BoxFit.cover,
-                              );
-                            }
-                            return const SizedBox();
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                  Watch(
-                    ctrl.isLoading,
-                    builder: (context, value) {
-                      if (value) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      return const SizedBox();
-                    },
-                  ),
-                ],
-              ),
-            ),
+          Watch(
+            ctrl.imageData,
+            builder: (context, imageData) {
+              return Watch(
+                ctrl.isLoading,
+                builder: (context, isLoading) {
+                  return ImageCard(
+                    imageData: imageData,
+                    isLoading: isLoading,
+                    colorScheme: ctrl.colorScheme.value,
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -110,27 +84,10 @@ class AppView extends CtrlWidget<AppCtrl> {
       floatingActionButton: Watch(
         ctrl.isLoading,
         builder: (context, isLoading) {
-          final widget = Watch(
-            ctrl.colorScheme,
-            builder: (context, colorScheme) {
-              return Theme(
-                data: Theme.of(context).copyWith(colorScheme: colorScheme),
-                child: ElevatedButton(
-                  onPressed: ctrl.getNewImage,
-                  child: const Text('Another'),
-                ),
-              );
-            },
+          return AnotherButton(
+            isLoading: isLoading,
+            onPressed: ctrl.getNewImage,
           );
-          // Visible when NOT loading (target=1), invisible when loading (target=0)
-          return widget
-              .animate(target: ctrl.isLoading.value ? 0 : 1)
-              .fade(duration: 200.ms)
-              .scale(
-                begin: const Offset(0.8, 0.8),
-                end: const Offset(1, 1),
-                duration: 200.ms,
-              );
         },
       ),
     );

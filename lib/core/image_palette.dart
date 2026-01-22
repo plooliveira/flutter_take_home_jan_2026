@@ -75,43 +75,64 @@ Future<ui.Image> _imageProviderToScaled(ImageProvider imageProvider) async {
 
   listener = ImageStreamListener(
     (ImageInfo info, bool sync) async {
-      loadFailureTimeout?.cancel();
-      stream.removeListener(listener);
-      final ui.Image image = info.image;
-      final int width = image.width;
-      final int height = image.height;
-      double paintWidth = width.toDouble();
-      double paintHeight = height.toDouble();
-      assert(width > 0 && height > 0);
+      try {
+        loadFailureTimeout?.cancel();
+        final ui.Image image = info.image;
+        final int width = image.width;
+        final int height = image.height;
 
-      final bool rescale = width > maxDimension || height > maxDimension;
-      if (rescale) {
-        paintWidth = (width > height)
-            ? maxDimension
-            : (maxDimension / height) * width;
-        paintHeight = (height > width)
-            ? maxDimension
-            : (maxDimension / width) * height;
+        if (width <= 0 || height <= 0) {
+          throw Exception('Invalid image dimensions: ${width}x$height');
+        }
+
+        double paintWidth = width.toDouble();
+        double paintHeight = height.toDouble();
+
+        final bool rescale = width > maxDimension || height > maxDimension;
+        if (rescale) {
+          paintWidth = (width > height)
+              ? maxDimension
+              : (maxDimension / height) * width;
+          paintHeight = (height > width)
+              ? maxDimension
+              : (maxDimension / width) * height;
+        }
+
+        final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+        final Canvas canvas = Canvas(pictureRecorder);
+        paintImage(
+          canvas: canvas,
+          rect: Rect.fromLTRB(0, 0, paintWidth, paintHeight),
+          image: image,
+          filterQuality: FilterQuality.none,
+        );
+
+        final ui.Picture picture = pictureRecorder.endRecording();
+
+        // Ensure at least 1 pixel to avoid engine crash (that whas anoying me with uncought exceptions)
+        final int targetWidth = paintWidth.round().clamp(1, 10000);
+        final int targetHeight = paintHeight.round().clamp(1, 10000);
+
+        scaledImage = await picture.toImage(targetWidth, targetHeight);
+        if (!imageCompleter.isCompleted) {
+          imageCompleter.complete(info.image);
+        }
+      } catch (e, stack) {
+        if (!imageCompleter.isCompleted) {
+          imageCompleter.completeError(e, stack);
+        }
+      } finally {
+        stream.removeListener(listener);
       }
-      final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-      final Canvas canvas = Canvas(pictureRecorder);
-      paintImage(
-        canvas: canvas,
-        rect: Rect.fromLTRB(0, 0, paintWidth, paintHeight),
-        image: image,
-        filterQuality: FilterQuality.none,
-      );
-
-      final ui.Picture picture = pictureRecorder.endRecording();
-      scaledImage = await picture.toImage(
-        paintWidth.toInt(),
-        paintHeight.toInt(),
-      );
-      imageCompleter.complete(info.image);
     },
     onError: (Object exception, StackTrace? stackTrace) {
+      loadFailureTimeout?.cancel();
       stream.removeListener(listener);
-      throw Exception('Failed to render image: $exception');
+      if (!imageCompleter.isCompleted) {
+        imageCompleter.completeError(
+          Exception('Failed to render image: $exception'),
+        );
+      }
     },
   );
 
